@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { ChevronUp, ChevronDown, Clock, Send } from 'lucide-react';
+import { SvenDirection, SvenResponse } from './types';
 
 export default function MotorControlApp() {
-    const [selectedDirection, setSelectedDirection] = useState(null);
-    const [selectedDuration, setSelectedDuration] = useState(null);
+    const [selectedDirection, setSelectedDirection] = useState<SvenDirection>(SvenDirection.Up);
+    const [selectedDuration, setSelectedDuration] = useState<number>(0);
     const [showDurations, setShowDurations] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [lastResponse, setLastResponse] = useState(null);
+    const [lastResponse, setLastResponse] = useState<SvenResponse | null>(null);
 
     const durations = [
         { label: '100ms', value: 100 },
@@ -20,13 +21,13 @@ export default function MotorControlApp() {
         { label: '10 seconds', value: 10000 }
     ];
 
-    const handleDirectionClick = (direction) => {
+    const handleDirectionClick = (direction: SvenDirection) => {
         setSelectedDirection(direction);
         setShowDurations(true);
-        setSelectedDuration(null);
+        setSelectedDuration(0);
     };
 
-    const handleDurationSelect = (duration) => {
+    const handleDurationSelect = (duration: number) => {
         setSelectedDuration(duration);
     };
 
@@ -35,7 +36,8 @@ export default function MotorControlApp() {
 
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:3000/api/motor', {
+            console.log('Sending command:', JSON.stringify({ direction: selectedDirection, duration: selectedDuration }));
+            const response = await fetch('http://localhost:3000/api/sven/command', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -45,14 +47,13 @@ export default function MotorControlApp() {
                     duration: selectedDuration
                 })
             });
-
             const result = await response.json();
             setLastResponse({
                 success: response.ok,
                 data: result,
                 timestamp: new Date().toLocaleTimeString()
             });
-        } catch (error) {
+        } catch (error: any) {
             setLastResponse({
                 success: false,
                 error: error.message,
@@ -64,8 +65,8 @@ export default function MotorControlApp() {
     };
 
     const reset = () => {
-        setSelectedDirection(null);
-        setSelectedDuration(null);
+        setSelectedDirection(SvenDirection.Up);
+        setSelectedDuration(0);
         setShowDurations(false);
         setLastResponse(null);
     };
@@ -88,14 +89,14 @@ export default function MotorControlApp() {
                             <div className="space-y-4">
                                 <h2 className="text-lg font-semibold text-white mb-4">Choose Direction</h2>
                                 <button
-                                    onClick={() => handleDirectionClick('Up')}
+                                    onClick={() => handleDirectionClick(SvenDirection.Up)}
                                     className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-3"
                                 >
                                     <ChevronUp size={24} />
                                     UP
                                 </button>
                                 <button
-                                    onClick={() => handleDirectionClick('Down')}
+                                    onClick={() => handleDirectionClick(SvenDirection.Down)}
                                     className="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-3"
                                 >
                                     <ChevronDown size={24} />
@@ -185,7 +186,7 @@ export default function MotorControlApp() {
                     {/* Info Panel */}
                     <div className="mt-6 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                         <h3 className="text-white font-semibold mb-2">API Endpoint</h3>
-                        <p className="text-slate-300 text-sm font-mono">POST http://localhost:3000/api/motor</p>
+                        <p className="text-slate-300 text-sm font-mono">POST http://localhost:3000/api/sven/command</p>
                         <p className="text-slate-400 text-xs mt-2">
                             Sends JSON: {`{direction: "Up|Down", duration: milliseconds}`}
                         </p>
