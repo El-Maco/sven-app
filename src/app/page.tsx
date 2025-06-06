@@ -1,103 +1,197 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+import { useState } from 'react';
+import { ChevronUp, ChevronDown, Clock, Send } from 'lucide-react';
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+export default function MotorControlApp() {
+    const [selectedDirection, setSelectedDirection] = useState(null);
+    const [selectedDuration, setSelectedDuration] = useState(null);
+    const [showDurations, setShowDurations] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [lastResponse, setLastResponse] = useState(null);
+
+    const durations = [
+        { label: '100ms', value: 100 },
+        { label: '250ms', value: 250 },
+        { label: '500ms', value: 500 },
+        { label: '1 second', value: 1000 },
+        { label: '2 seconds', value: 2000 },
+        { label: '5 seconds', value: 5000 },
+        { label: '10 seconds', value: 10000 }
+    ];
+
+    const handleDirectionClick = (direction) => {
+        setSelectedDirection(direction);
+        setShowDurations(true);
+        setSelectedDuration(null);
+    };
+
+    const handleDurationSelect = (duration) => {
+        setSelectedDuration(duration);
+    };
+
+    const sendCommand = async () => {
+        if (!selectedDirection || !selectedDuration) return;
+
+        setIsLoading(true);
+        try {
+            const response = await fetch('http://localhost:3000/api/motor', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    direction: selectedDirection,
+                    duration: selectedDuration
+                })
+            });
+
+            const result = await response.json();
+            setLastResponse({
+                success: response.ok,
+                data: result,
+                timestamp: new Date().toLocaleTimeString()
+            });
+        } catch (error) {
+            setLastResponse({
+                success: false,
+                error: error.message,
+                timestamp: new Date().toLocaleTimeString()
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const reset = () => {
+        setSelectedDirection(null);
+        setSelectedDuration(null);
+        setShowDurations(false);
+        setLastResponse(null);
+    };
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+            <div className="container mx-auto px-4 py-8">
+                <div className="max-w-md mx-auto">
+                    {/* Header */}
+                    <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold text-white mb-2">Motor Control</h1>
+                        <p className="text-slate-300">Select direction and duration</p>
+                    </div>
+
+                    {/* Main Control Panel */}
+                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-2xl">
+
+                        {/* Direction Buttons */}
+                        {!showDurations && (
+                            <div className="space-y-4">
+                                <h2 className="text-lg font-semibold text-white mb-4">Choose Direction</h2>
+                                <button
+                                    onClick={() => handleDirectionClick('Up')}
+                                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-3"
+                                >
+                                    <ChevronUp size={24} />
+                                    UP
+                                </button>
+                                <button
+                                    onClick={() => handleDirectionClick('Down')}
+                                    className="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-3"
+                                >
+                                    <ChevronDown size={24} />
+                                    DOWN
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Duration Selection */}
+                        {showDurations && (
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-lg font-semibold text-white">Duration for {selectedDirection}</h2>
+                                    <button
+                                        onClick={reset}
+                                        className="text-slate-300 hover:text-white text-sm underline"
+                                    >
+                                        Change Direction
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    {durations.map((duration) => (
+                                        <button
+                                            key={duration.value}
+                                            onClick={() => handleDurationSelect(duration.value)}
+                                            className={`p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center gap-2 ${selectedDuration === duration.value
+                                                ? 'border-blue-400 bg-blue-500/20 text-blue-200'
+                                                : 'border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:bg-white/10'
+                                                }`}
+                                        >
+                                            <Clock size={16} />
+                                            {duration.label}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Send Button */}
+                                {selectedDuration && (
+                                    <button
+                                        onClick={sendCommand}
+                                        disabled={isLoading}
+                                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-slate-500 disabled:to-slate-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-3 mt-6"
+                                    >
+                                        {isLoading ? (
+                                            <>
+                                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                Sending...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Send size={20} />
+                                                Send Command
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Response Status */}
+                        {lastResponse && (
+                            <div className={`mt-6 p-4 rounded-lg border-2 ${lastResponse.success
+                                ? 'border-green-400 bg-green-500/20 text-green-200'
+                                : 'border-red-400 bg-red-500/20 text-red-200'
+                                }`}>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className={`w-2 h-2 rounded-full ${lastResponse.success ? 'bg-green-400' : 'bg-red-400'
+                                        }`}></div>
+                                    <span className="font-semibold">
+                                        {lastResponse.success ? 'Success' : 'Error'}
+                                    </span>
+                                    <span className="text-xs opacity-75 ml-auto">
+                                        {lastResponse.timestamp}
+                                    </span>
+                                </div>
+                                <div className="text-sm font-mono">
+                                    {lastResponse.success
+                                        ? `Sent: ${selectedDirection} for ${selectedDuration}ms`
+                                        : `Failed: ${lastResponse.error}`
+                                    }
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Info Panel */}
+                    <div className="mt-6 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                        <h3 className="text-white font-semibold mb-2">API Endpoint</h3>
+                        <p className="text-slate-300 text-sm font-mono">POST http://localhost:3000/api/motor</p>
+                        <p className="text-slate-400 text-xs mt-2">
+                            Sends JSON: {`{direction: "Up|Down", duration: milliseconds}`}
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    );
 }
