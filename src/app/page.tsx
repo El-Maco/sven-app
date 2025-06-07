@@ -53,6 +53,7 @@ export default function MotorControlApp() {
                 data: result,
                 timestamp: new Date().toLocaleTimeString()
             });
+            /* eslint-disable  @typescript-eslint/no-explicit-any */
         } catch (error: any) {
             setLastResponse({
                 success: false,
