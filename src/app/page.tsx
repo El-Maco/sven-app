@@ -37,7 +37,8 @@ export default function MotorControlApp() {
         setIsLoading(true);
         try {
             console.log('Sending command:', JSON.stringify({ direction: selectedDirection, duration: selectedDuration }));
-            const response = await fetch('http://localhost:3000/api/sven/command', {
+            const webserverIp = window.location.hostname;
+            const response = await fetch(`http://${webserverIp}:3000/api/sven/command`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
