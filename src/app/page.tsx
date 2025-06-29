@@ -32,6 +32,7 @@ export default function MotorControlApp() {
     const sendCommand = async () => {
         if (!selectedDirection || !selectedDuration) return;
 
+        reset();
         setIsLoading(true);
         try {
             console.log('Sending command:', JSON.stringify({ direction: selectedDirection, duration: selectedDuration }));
