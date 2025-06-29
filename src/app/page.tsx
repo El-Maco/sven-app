@@ -44,14 +44,15 @@ export default function MotorControlApp() {
 
     const handleDurationSelect = (duration: number) => {
         setSelectedDuration(duration);
+        sendCommand(duration);;
     };
 
-    const sendCommand = async () => {
-        if (!selectedDirection || !selectedDuration) return;
+    const sendCommand = async (duration: number) => {
+        if (!selectedDirection) return;
 
         setIsLoading(true);
         try {
-            console.log('Sending command:', JSON.stringify({ direction: selectedDirection, duration: selectedDuration }));
+            console.log('Sending command:', JSON.stringify({ direction: selectedDirection, duration }));
             const response = await fetch(svenCommandEndpoint, {
                 method: 'POST',
                 headers: {
@@ -59,7 +60,7 @@ export default function MotorControlApp() {
                 },
                 body: JSON.stringify({
                     direction: selectedDirection,
-                    duration: selectedDuration
+                    duration
                 })
             });
             const result = await response.json();
@@ -136,41 +137,21 @@ export default function MotorControlApp() {
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
-                                    {durations.map((duration) => (
+                                    {durations.map((currDuration) => (
                                         <button
-                                            key={duration.value}
-                                            onClick={() => handleDurationSelect(duration.value)}
-                                            className={`p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center gap-2 ${selectedDuration === duration.value
+                                            key={currDuration.value}
+                                            onClick={() => handleDurationSelect(currDuration.value)}
+                                            disabled={isLoading}
+                                            className={`p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center gap-2 ${selectedDuration === currDuration.value
                                                 ? 'border-blue-400 bg-blue-500/20 text-blue-200'
                                                 : 'border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:bg-white/10'
                                                 }`}
                                         >
                                             <Clock size={16} />
-                                            {duration.label}
+                                            {currDuration.label}
                                         </button>
                                     ))}
                                 </div>
-
-                                {/* Send Button */}
-                                {selectedDuration > 0 && (
-                                    <button
-                                        onClick={sendCommand}
-                                        disabled={isLoading}
-                                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-slate-500 disabled:to-slate-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-3 mt-6"
-                                    >
-                                        {isLoading ? (
-                                            <>
-                                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                                Sending...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Send size={20} />
-                                                Send Command
-                                            </>
-                                        )}
-                                    </button>
-                                )}
                             </div>
                         )}
 
