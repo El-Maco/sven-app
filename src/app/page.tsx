@@ -186,7 +186,7 @@ export default function MotorControlApp() {
                     {/* Info Panel */}
                     <div className="mt-6 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                         <h3 className="text-white font-semibold mb-2">API Endpoint</h3>
-                        <p className="text-slate-300 text-sm font-mono">POST http://localhost:3000/api/sven/command</p>
+                        <p className="text-slate-300 text-sm font-mono">POST http://minimaco:3001/api/sven/command</p>
                         <p className="text-slate-400 text-xs mt-2">
                             Sends JSON: {`{direction: "Up|Down", duration: milliseconds}`}
                         </p>
