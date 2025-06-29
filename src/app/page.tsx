@@ -3,6 +3,11 @@
 import { useState } from 'react';
 import { ChevronUp, ChevronDown, Clock, Send } from 'lucide-react';
 import { SvenDirection, SvenResponse } from './types';
+import dotenv from 'dotenv';
+dotenv.config();
+
+const apiBaseUrl = `http://${process.env.SVEN_API_URL || 'localhost:3000'}/api`;
+const svenCommandEndpoint = `${apiBaseUrl}/sven/command`;
 
 export default function MotorControlApp() {
     const [selectedDirection, setSelectedDirection] = useState<SvenDirection>(SvenDirection.Up);
@@ -36,8 +41,7 @@ export default function MotorControlApp() {
         setIsLoading(true);
         try {
             console.log('Sending command:', JSON.stringify({ direction: selectedDirection, duration: selectedDuration }));
-            const webserverIp = window.location.hostname;
-            const response = await fetch(`http://${webserverIp}:3000/api/sven/command`, {
+            const response = await fetch(svenCommandEndpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -187,7 +191,7 @@ export default function MotorControlApp() {
                     {/* Info Panel */}
                     <div className="mt-6 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                         <h3 className="text-white font-semibold mb-2">API Endpoint</h3>
-                        <p className="text-slate-300 text-sm font-mono">POST http://minimaco:3001/api/sven/command</p>
+                        <p className="text-slate-300 text-sm font-mono">POST {svenCommandEndpoint}</p>
                         <p className="text-slate-400 text-xs mt-2">
                             Sends JSON: {`{direction: "Up|Down", duration: milliseconds}`}
                         </p>
