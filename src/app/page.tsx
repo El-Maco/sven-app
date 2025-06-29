@@ -17,6 +17,15 @@ export default function MotorControlApp() {
     const [showDurations, setShowDurations] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [lastResponse, setLastResponse] = useState<SvenResponse | null>(null);
+    const [statusTimeoutId, setStatusTimeoutId] = useState<NodeJS.Timeout | null>(null);
+
+    const clearStatusTimeout = () => {
+        if (statusTimeoutId) {
+            clearTimeout(statusTimeoutId);
+            setStatusTimeoutId(null);
+        }
+        setLastResponse(null);
+    }
 
     const durations = [
         { label: '1 second', value: 1000 },
@@ -27,6 +36,7 @@ export default function MotorControlApp() {
     ];
 
     const handleDirectionClick = (direction: SvenDirection) => {
+        clearStatusTimeout();
         setSelectedDirection(direction);
         setShowDurations(true);
         setSelectedDuration(0);
@@ -75,8 +85,6 @@ export default function MotorControlApp() {
     };
 
     const reset = () => {
-        setSelectedDirection(SvenDirection.Up);
-        setSelectedDuration(0);
         setShowDurations(false);
     };
 
