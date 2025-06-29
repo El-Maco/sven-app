@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronUp, ChevronDown, Clock, Send } from 'lucide-react';
+import { ChevronUp, ChevronDown, Clock } from 'lucide-react';
 import { SvenDirection, SvenResponse } from './types';
 import dotenv from 'dotenv';
 dotenv.config();
