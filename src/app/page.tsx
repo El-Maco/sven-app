@@ -6,8 +6,10 @@ import { SvenDirection, SvenResponse } from './types';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const apiBaseUrl = `http://${process.env.SVEN_API_URL || 'localhost:3000'}/api`;
+const apiBaseUrl = `http://${process.env.NEXT_PUBLIC_SVEN_API_URL || 'localhost:3000'}/api`;
 const svenCommandEndpoint = `${apiBaseUrl}/sven/command`;
+
+const statusTimeout = 5000;
 
 export default function MotorControlApp() {
     const [selectedDirection, setSelectedDirection] = useState<SvenDirection>(SvenDirection.Up);
@@ -57,6 +59,9 @@ export default function MotorControlApp() {
                 data: result,
                 timestamp: new Date().toLocaleTimeString()
             });
+            setTimeout(() => {
+                setLastResponse(null);
+            }, statusTimeout);
             /* eslint-disable  @typescript-eslint/no-explicit-any */
         } catch (error: any) {
             setLastResponse({
