@@ -12,13 +12,11 @@ export default function MotorControlApp() {
     const [lastResponse, setLastResponse] = useState<SvenResponse | null>(null);
 
     const durations = [
-        { label: '100ms', value: 100 },
-        { label: '250ms', value: 250 },
-        { label: '500ms', value: 500 },
         { label: '1 second', value: 1000 },
         { label: '2 seconds', value: 2000 },
         { label: '5 seconds', value: 5000 },
-        { label: '10 seconds', value: 10000 }
+        { label: '10 seconds', value: 10000 },
+        { label: '15 seconds', value: 15000 }
     ];
 
     const handleDirectionClick = (direction: SvenDirection) => {
