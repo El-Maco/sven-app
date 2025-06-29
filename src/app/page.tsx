@@ -135,7 +135,7 @@ export default function MotorControlApp() {
                                 </div>
 
                                 {/* Send Button */}
-                                {selectedDuration && (
+                                {selectedDuration > 0 && (
                                     <button
                                         onClick={sendCommand}
                                         disabled={isLoading}
