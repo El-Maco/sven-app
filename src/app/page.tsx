@@ -39,7 +39,6 @@ export default function MotorControlApp() {
     const sendCommand = async () => {
         if (!selectedDirection || !selectedDuration) return;
 
-        reset();
         setIsLoading(true);
         try {
             console.log('Sending command:', JSON.stringify({ direction: selectedDirection, duration: selectedDuration }));
@@ -72,13 +71,13 @@ export default function MotorControlApp() {
         } finally {
             setIsLoading(false);
         }
+        reset();
     };
 
     const reset = () => {
         setSelectedDirection(SvenDirection.Up);
         setSelectedDuration(0);
         setShowDurations(false);
-        setLastResponse(null);
     };
 
     return (
