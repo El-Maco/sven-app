@@ -86,7 +86,7 @@ export default function MotorControlApp() {
                 <div className="max-w-md mx-auto">
                     {/* Header */}
                     <div className="text-center mb-8">
-                        <h1 className="text-3xl font-bold text-white mb-2">Motor Control</h1>
+                        <h1 className="text-3xl font-bold text-white mb-2">Sven Motor Control</h1>
                         <p className="text-slate-300">Select direction and duration</p>
                     </div>
 
