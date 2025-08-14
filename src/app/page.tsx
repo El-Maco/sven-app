@@ -6,8 +6,9 @@ import { SvenDirection, SvenResponse } from './types';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const apiBaseUrl = `http://${process.env.NEXT_PUBLIC_SVEN_API_URL || 'localhost:3000'}/api`;
-const svenCommandEndpoint = `${apiBaseUrl}/sven/command`;
+const apiBaseUrl = `http://${process.env.NEXT_PUBLIC_SVEN_API_URL || 'localhost'}`;
+const apiPort = 3001;
+const svenCommandEndpoint = `${apiBaseUrl}:${apiPort}/api/sven/command`;
 
 const statusTimeout = 5000;
 
