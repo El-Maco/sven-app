@@ -14,13 +14,18 @@ export enum SvenMoveMode {
     Position
 }
 
+export type SvenState = {
+    height_mm: number;
+    position: SvenPosition;
+}
+
 export enum SvenPosition {
-    Bottom,
-    Top,
-    ArmRest,
-    AboveArmrest,
-    Standing,
-    Custom
+    Bottom = "Bottom",
+    Top = "Top",
+    ArmRest = "ArmRest",
+    AboveArmrest = "AboveArmrest",
+    Standing = "Standing",
+    Custom = "Custom",
 }
 
 export enum SvenDirection {

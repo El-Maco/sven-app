@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronUp, ChevronDown, Clock } from 'lucide-react';
 import { SvenCommand, SvenMoveMode, SvenDirection, SvenResponse } from './types';
 import dotenv from 'dotenv';
@@ -40,6 +40,31 @@ export default function MotorControlApp() {
     const [responseNotification, setResponseNotification] = useState<SvenResponse | null>(null);
     const [statusTimeoutId, setStatusTimeoutId] = useState<NodeJS.Timeout | null>(null);
     const [selectedMode, setSelectedMode] = useState<SvenMoveMode>(SvenMoveMode.Duration);
+    const [currentSvenState, setCurrentSvenState] = useState<SvenResponse | null>(null);
+
+    useEffect(() => {
+        const fetchSvenState = async () => {
+            try {
+                const response = await fetch(`${apiBaseUrl}:${apiPort}/api/sven/state`);
+                if (!response.ok) {
+                    throw new Error(`Error fetching Sven state: ${response.statusText}`);
+                }
+                const svenState = await response.json();
+                setCurrentSvenState(svenState);
+                setSelectedValue(svenState.height_mm || 0); // Set initial value based on Sven state
+            } catch (error) {
+                console.error('Failed to fetch Sven state:', error);
+            }
+        };
+
+        // Fetch Sven state on mount
+        fetchSvenState();
+
+        // Set up interval to refresh Sven state every 10 seconds
+        const intervalId = setInterval(fetchSvenState, 10000);
+
+        return () => clearInterval(intervalId); // Cleanup on unmount
+    }, [])
 
     const clearNotifications = () => {
         if (statusTimeoutId) {
@@ -127,9 +152,9 @@ export default function MotorControlApp() {
                         <div className={`fixed mt-6 p-4 top-6 right-6 z-50 min-w-[300px] rounded-lg border-2 max-w-sm opacity-100 cursor-pointer
                                 ${responseNotification.success ? 'border-green-400 bg-green-500/80 text-green-200'
                                 : 'border-red-400 bg-red-500/80 text-red-200'
-                                }`}
-                                onClick={clearNotifications}
-                                >
+                            }`}
+                            onClick={clearNotifications}
+                        >
                             <div className="flex items-center gap-2 mb-2">
                                 <div className={`w-2 h-2 rounded-full ${responseNotification.success ? 'bg-green-400' : 'bg-red-400'
                                     }`}></div>
@@ -261,8 +286,8 @@ export default function MotorControlApp() {
                             >
                                 <input
                                     type="range"
-                                    min={62}
-                                    max={128}
+                                    min={622}
+                                    max={1274}
                                     value={selectedValue}
                                     onChange={e => setSelectedValue(Number(e.target.value))}
                                     disabled={isLoading}
@@ -275,7 +300,7 @@ export default function MotorControlApp() {
                                     className="p-3 rounded-lg border-2 border-blue-400 bg-blue-500/20 text-blue-200 transition-all duration-200 flex items-center justify-center gap-2"
                                 >
                                     <Clock size={16} />
-                                    Move to {selectedValue} cm
+                                    Move to {selectedValue / 10} cm
                                 </button>
                             </form>
                         </div>
