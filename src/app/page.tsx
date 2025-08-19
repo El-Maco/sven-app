@@ -37,20 +37,20 @@ export default function MotorControlApp() {
     const [selectedDirection, setSelectedDirection] = useState<SvenDirection>(SvenDirection.Up);
     const [showSvenDirectionButtons, setShowSvenDirectionButtons] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [lastResponse, setLastResponse] = useState<SvenResponse | null>(null);
+    const [responseNotification, setResponseNotification] = useState<SvenResponse | null>(null);
     const [statusTimeoutId, setStatusTimeoutId] = useState<NodeJS.Timeout | null>(null);
     const [selectedMode, setSelectedMode] = useState<SvenMoveMode>(SvenMoveMode.Duration);
 
-    const clearStatusTimeout = () => {
+    const clearNotifications = () => {
         if (statusTimeoutId) {
             clearTimeout(statusTimeoutId);
             setStatusTimeoutId(null);
         }
-        setLastResponse(null);
+        setResponseNotification(null);
     }
 
     const handleDirectionClick = (direction: SvenDirection) => {
-        clearStatusTimeout();
+        clearNotifications();
         setSelectedDirection(direction);
         setShowSvenDirectionButtons(true);
         setSelectedValue(0);
@@ -82,7 +82,7 @@ export default function MotorControlApp() {
                 body: JSON.stringify(body)
             });
             const result = await response.json();
-            setLastResponse({
+            setResponseNotification({
                 success: response.ok,
                 data: result,
                 timestamp: new Date().toLocaleTimeString()
@@ -92,12 +92,12 @@ export default function MotorControlApp() {
             }
             setStatusTimeoutId(
                 setTimeout(() => {
-                    setLastResponse(null);
+                    setResponseNotification(null);
                 }, statusTimeout)
             )
             /* eslint-disable  @typescript-eslint/no-explicit-any */
         } catch (error: any) {
-            setLastResponse({
+            setResponseNotification({
                 success: false,
                 error: error.message,
                 timestamp: new Date().toLocaleTimeString()
@@ -121,6 +121,33 @@ export default function MotorControlApp() {
                         <h1 className="text-3xl font-bold text-white mb-2">Sven Motor Control</h1>
                         <p className="text-slate-300">Select direction and duration</p>
                     </div>
+
+                    {/* Response Status */}
+                    {responseNotification && (
+                        <div className={`fixed mt-6 p-4 top-6 right-6 z-50 min-w-[300px] rounded-lg border-2 max-w-sm opacity-100 cursor-pointer
+                                ${responseNotification.success ? 'border-green-400 bg-green-500/80 text-green-200'
+                                : 'border-red-400 bg-red-500/80 text-red-200'
+                                }`}
+                                onClick={clearNotifications}
+                                >
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className={`w-2 h-2 rounded-full ${responseNotification.success ? 'bg-green-400' : 'bg-red-400'
+                                    }`}></div>
+                                <span className="font-semibold">
+                                    {responseNotification.success ? 'Success' : 'Error'}
+                                </span>
+                                <span className="text-xs opacity-75 ml-auto">
+                                    {responseNotification.timestamp}
+                                </span>
+                            </div>
+                            <div className="text-sm font-mono">
+                                {responseNotification.success
+                                    ? `Sent: Command sent successfully`
+                                    : `Failed: ${responseNotification.error}`
+                                }
+                            </div>
+                        </div>
+                    )}
 
                     {/* Main Control Panel */}
                     <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-2xl">
@@ -252,32 +279,6 @@ export default function MotorControlApp() {
                                 </button>
                             </form>
                         </div>
-
-
-                        {/* Response Status */}
-                        {lastResponse && (
-                            <div className={`mt-6 p-4 rounded-lg border-2 ${lastResponse.success
-                                ? 'border-green-400 bg-green-500/20 text-green-200'
-                                : 'border-red-400 bg-red-500/20 text-red-200'
-                                }`}>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className={`w-2 h-2 rounded-full ${lastResponse.success ? 'bg-green-400' : 'bg-red-400'
-                                        }`}></div>
-                                    <span className="font-semibold">
-                                        {lastResponse.success ? 'Success' : 'Error'}
-                                    </span>
-                                    <span className="text-xs opacity-75 ml-auto">
-                                        {lastResponse.timestamp}
-                                    </span>
-                                </div>
-                                <div className="text-sm font-mono">
-                                    {lastResponse.success
-                                        ? `Sent: ${SvenMoveMode[selectedMode]} for ${selectedValue}ms`
-                                        : `Failed: ${lastResponse.error}`
-                                    }
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     {/* Info Panel */}
