@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronUp, ChevronDown, Clock } from 'lucide-react';
-import { SvenDirection, SvenResponse } from './types';
+import { SvenCommand, SvenResponse } from './types';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -13,9 +13,9 @@ const svenCommandEndpoint = `${apiBaseUrl}:${apiPort}/api/sven/command`;
 const statusTimeout = 5000;
 
 export default function MotorControlApp() {
-    const [selectedDirection, setSelectedDirection] = useState<SvenDirection>(SvenDirection.Up);
-    const [selectedDuration, setSelectedDuration] = useState<number>(0);
-    const [showDurations, setShowDurations] = useState(false);
+    const [selectedSvenCommand, setSelectedSvenCommand] = useState<SvenCommand>(SvenCommand.UpDuration);
+    const [selectedValue, setSelectedValue] = useState<number>(0);
+    const [showSvenCommands, setShowSvenCommands] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [lastResponse, setLastResponse] = useState<SvenResponse | null>(null);
     const [statusTimeoutId, setStatusTimeoutId] = useState<NodeJS.Timeout | null>(null);
@@ -36,33 +36,31 @@ export default function MotorControlApp() {
         { label: '15 seconds', value: 15000 }
     ];
 
-    const handleDirectionClick = (direction: SvenDirection) => {
+    const handleDirectionClick = (svenCommand: SvenCommand) => {
         clearStatusTimeout();
-        setSelectedDirection(direction);
-        setShowDurations(true);
-        setSelectedDuration(0);
+        setSelectedSvenCommand(svenCommand);
+        setShowSvenCommands(true);
+        setSelectedValue(0);
     };
 
-    const handleDurationSelect = (duration: number) => {
-        setSelectedDuration(duration);
-        sendCommand(duration);;
+    const handleDurationSelect = (value: number) => {
+        setSelectedValue(value);
+        sendCommand(value);;
     };
 
-    const sendCommand = async (duration: number) => {
-        if (!selectedDirection) return;
+    const sendCommand = async (value: number) => {
+        if (!selectedSvenCommand) return;
 
         setIsLoading(true);
         try {
-            console.log('Sending command:', JSON.stringify({ direction: selectedDirection, duration }));
+            const body = { command: selectedSvenCommand, value };
+            console.log('Sending command:', body);
             const response = await fetch(svenCommandEndpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    direction: selectedDirection,
-                    duration
-                })
+                body: JSON.stringify(body)
             });
             const result = await response.json();
             setLastResponse({
@@ -87,7 +85,7 @@ export default function MotorControlApp() {
     };
 
     const reset = () => {
-        setShowDurations(false);
+        setShowSvenCommands(false);
     };
 
     return (
@@ -104,18 +102,18 @@ export default function MotorControlApp() {
                     <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-2xl">
 
                         {/* Direction Buttons */}
-                        {!showDurations && (
+                        {!showSvenCommands && (
                             <div className="space-y-4">
                                 <h2 className="text-lg font-semibold text-white mb-4">Choose Direction</h2>
                                 <button
-                                    onClick={() => handleDirectionClick(SvenDirection.Up)}
+                                    onClick={() => handleDirectionClick(SvenCommand.UpDuration)}
                                     className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-3"
                                 >
                                     <ChevronUp size={24} />
                                     UP
                                 </button>
                                 <button
-                                    onClick={() => handleDirectionClick(SvenDirection.Down)}
+                                    onClick={() => handleDirectionClick(SvenCommand.DownDuration)}
                                     className="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-3"
                                 >
                                     <ChevronDown size={24} />
@@ -125,10 +123,10 @@ export default function MotorControlApp() {
                         )}
 
                         {/* Duration Selection */}
-                        {showDurations && (
+                        {showSvenCommands && (
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-lg font-semibold text-white">Duration for {selectedDirection}</h2>
+                                    <h2 className="text-lg font-semibold text-white">Duration for {selectedSvenCommand}</h2>
                                     <button
                                         onClick={reset}
                                         className="text-slate-300 hover:text-white text-sm underline"
@@ -143,7 +141,7 @@ export default function MotorControlApp() {
                                             key={currDuration.value}
                                             onClick={() => handleDurationSelect(currDuration.value)}
                                             disabled={isLoading}
-                                            className={`p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center gap-2 ${selectedDuration === currDuration.value
+                                            className={`p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center gap-2 ${selectedValue === currDuration.value
                                                 ? 'border-blue-400 bg-blue-500/20 text-blue-200'
                                                 : 'border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:bg-white/10'
                                                 }`}
@@ -174,7 +172,7 @@ export default function MotorControlApp() {
                                 </div>
                                 <div className="text-sm font-mono">
                                     {lastResponse.success
-                                        ? `Sent: ${selectedDirection} for ${selectedDuration}ms`
+                                        ? `Sent: ${selectedSvenCommand} for ${selectedValue}ms`
                                         : `Failed: ${lastResponse.error}`
                                     }
                                 </div>

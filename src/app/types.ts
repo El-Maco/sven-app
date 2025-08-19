@@ -1,6 +1,10 @@
-export enum SvenDirection {
-    Up = 'Up',
-    Down = 'Down',
+export enum SvenCommand {
+    UpDuration = 'UpDuration',
+    DownDuration = 'DownDuration',
+    UpRelative = 'UpRelative',
+    DownRelative = 'DownRelative',
+    AbsoluteHeight = 'AbsoluteHeight',
+    Position = 'Position',
 }
 
 export interface SvenResponse {
