@@ -33,7 +33,7 @@ const DISTANCES = [
 const statusTimeout = 5000;
 
 export default function MotorControlApp() {
-    const [selectedValue, setSelectedValue] = useState<number>(0);
+    const [selectedValue, setSelectedValue] = useState<number>(-1);
     const [selectedDirection, setSelectedDirection] = useState<SvenDirection>(SvenDirection.Up);
     const [showSvenDirectionButtons, setShowSvenDirectionButtons] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -51,7 +51,7 @@ export default function MotorControlApp() {
                 }
                 const svenState = await response.json();
                 setCurrentSvenState(svenState);
-                setSelectedValue(svenState.height_mm || 0); // Set initial value based on Sven state
+                setSelectedValue(svenState.height_mm || -1); // Set initial value based on Sven state
             } catch (error) {
                 console.error('Failed to fetch Sven state:', error);
             }
