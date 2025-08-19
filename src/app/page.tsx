@@ -300,7 +300,7 @@ export default function MotorControlApp() {
                                     className="p-3 rounded-lg border-2 border-blue-400 bg-blue-500/20 text-blue-200 transition-all duration-200 flex items-center justify-center gap-2"
                                 >
                                     <Clock size={16} />
-                                    Move to {selectedValue / 10} cm
+                                    Set to {(selectedValue / 10).toFixed(1)} cm
                                 </button>
                             </form>
                         </div>
