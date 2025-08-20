@@ -232,10 +232,7 @@ export default function MotorControlApp() {
                                                 key={currDuration.value}
                                                 onClick={() => sendCommand(currDuration.value)}
                                                 disabled={isLoading}
-                                                className={`p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center gap-2 ${selectedValue === currDuration.value
-                                                    ? 'border-blue-400 bg-blue-500/20 text-blue-200'
-                                                    : 'border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:bg-white/10'
-                                                    }`}
+                                                className={`p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center gap-2 border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:bg-white/10`}
                                             >
                                                 <Clock size={16} />
                                                 {currDuration.label}
@@ -261,10 +258,7 @@ export default function MotorControlApp() {
                                         key={currentPosition}
                                         onClick={() => sendCommand(index, SvenMoveMode.Position)}
                                         disabled={isLoading}
-                                        className={`p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center gap-2 ${selectedValue === index
-                                            ? 'border-blue-400 bg-blue-500/20 text-blue-200'
-                                            : 'border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:bg-white/10'
-                                            }`}
+                                        className={`p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center gap-2 border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:bg-white/10`}
                                     >
                                         <Clock size={16} />
                                         {currentPosition}
