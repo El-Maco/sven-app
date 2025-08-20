@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ChevronUp, ChevronDown, Clock } from 'lucide-react';
-import { SvenCommand, SvenMoveMode, SvenDirection, SvenResponse } from './types';
+import { SvenCommand, SvenMoveMode, SvenDirection, SvenResponse, SvenState } from './types';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -11,7 +11,7 @@ const apiPort = 3001;
 const svenCommandEndpoint = `${apiBaseUrl}:${apiPort}/api/sven/command`;
 
 const MODES = ['Duration', 'Relative', 'Absolute', 'Position'] as const;
-const SVEN_POSITIONS = ['Bottom', 'Top', 'Arm Rest', 'Above Armrest', 'Standing'] as const;
+const SVEN_POSITIONS = ['Bottom', 'Top', 'Armrest', 'AboveArmrest', 'Standing', 'Custom'] as const;
 const DURATIONS = [
     { label: '1 s', value: 1000 },
     { label: '2 s', value: 2000 },
@@ -40,7 +40,7 @@ export default function MotorControlApp() {
     const [responseNotification, setResponseNotification] = useState<SvenResponse | null>(null);
     const [statusTimeoutId, setStatusTimeoutId] = useState<NodeJS.Timeout | null>(null);
     const [selectedMode, setSelectedMode] = useState<SvenMoveMode>(SvenMoveMode.Duration);
-    const [currentSvenState, setCurrentSvenState] = useState<SvenResponse | null>(null);
+    const [currentSvenState, setCurrentSvenState] = useState<SvenState | null>(null);
 
     useEffect(() => {
         const fetchSvenState = async () => {
@@ -49,9 +49,10 @@ export default function MotorControlApp() {
                 if (!response.ok) {
                     throw new Error(`Error fetching Sven state: ${response.statusText}`);
                 }
-                const svenState = await response.json();
+                const svenState: SvenState = await response.json();
                 setCurrentSvenState(svenState);
                 setSelectedValue(svenState.height_mm || -1); // Set initial value based on Sven state
+                console.log('Fetched Sven state:', svenState);
             } catch (error) {
                 console.error('Failed to fetch Sven state:', error);
             }
@@ -140,11 +141,10 @@ export default function MotorControlApp() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
             <div className="container mx-auto px-4 py-8">
-                <div className="max-w-md mx-auto">
+                <div className="max-w-md mx-auto space-y-6">
                     {/* Header */}
                     <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold text-white mb-2">Sven Motor Control</h1>
-                        <p className="text-slate-300">Select direction and duration</p>
                     </div>
 
                     {/* Response Status */}
@@ -174,134 +174,134 @@ export default function MotorControlApp() {
                         </div>
                     )}
 
-                    {/* Main Control Panel */}
-                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-2xl">
+                    {/* POSITION */}
+                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mt-6 border border-white/20 shadow-2xl space-y-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-semibold text-white">Move to a position</h2>
+                            <p className="text-slate-300 text-sm font-mono">h: {((currentSvenState?.height_mm || 0) / 10).toFixed(1)} cm</p>
+                        </div>
 
-                        <div className="space-y-4">
-                            <div className="flex flex-row items-center justify-center gap-3 mb-4">
+                        <div className="grid grid-cols-2 gap-3">
+                            {SVEN_POSITIONS.map((currentPosition, index) => (
                                 <button
-                                    className={`px-4 py-2 rounded-lg ${selectedMode === SvenMoveMode.Relative ? 'bg-blue-500 text-white' : 'bg-white/10 text-slate-300 hover:bg-white/20'}`}
-                                    onClick={() => setSelectedMode(SvenMoveMode.Relative)}
+                                    key={currentPosition}
+                                    onClick={() => sendCommand(index, SvenMoveMode.Position)}
+                                    disabled={isLoading}
+                                    className={`p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center gap-2 hover:border-white/40 hover:bg-white/10
+                                        ${currentSvenState?.position === currentPosition ? 'border-blue-400 bg-blue-900/20 text-blue-200' : 'text-slate-300 border-white/20 bg-white/5'}
+                                        `}
                                 >
-                                    Distance
+                                    <Clock size={16} />
+                                    {currentPosition}
                                 </button>
-                                <button
-                                    className={`px-4 py-2 rounded-lg ${selectedMode === SvenMoveMode.Duration ? 'bg-blue-500 text-white' : 'bg-white/10 text-slate-300 hover:bg-white/20'}`}
-                                    onClick={() => setSelectedMode(SvenMoveMode.Duration)}
-                                >
-                                    Duration
-                                </button>
-                            </div>
-
-                            {/* RELATIVE */}
-                            {!showSvenDirectionButtons && (
-                                <>
-                                    <h2 className="text-lg font-semibold text-white mb-4">Move in a direction</h2>
-                                    <button
-                                        onClick={() => handleDirectionClick(SvenDirection.Up)}
-                                        className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-3"
-                                    >
-                                        <ChevronUp size={24} />
-                                        UP
-                                    </button>
-                                    <button
-                                        onClick={() => handleDirectionClick(SvenDirection.Down)}
-                                        className="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-3"
-                                    >
-                                        <ChevronDown size={24} />
-                                        DOWN
-                                    </button>
-                                </>
-                            )}
-
-                            {showSvenDirectionButtons && (
-                                <>
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h2 className="text-lg font-semibold text-white">{SvenMoveMode[selectedMode]} move</h2>
-                                        <button
-                                            onClick={reset}
-                                            className="text-slate-300 hover:text-white text-sm underline"
-                                        >
-                                            Change Direction
-                                        </button>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {(selectedMode === SvenMoveMode.Duration ? DURATIONS : DISTANCES).map((currDuration) => (
-                                            <button
-                                                key={currDuration.value}
-                                                onClick={() => sendCommand(currDuration.value)}
-                                                disabled={isLoading}
-                                                className={`p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center gap-2 border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:bg-white/10`}
-                                            >
-                                                <Clock size={16} />
-                                                {currDuration.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
+                            ))}
                         </div>
                     </div>
 
-                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mt-6 border border-white/20 shadow-2xl">
-
-                        {/* POSITION */}
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-semibold text-white">Move to a position</h2>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                {SVEN_POSITIONS.map((currentPosition, index) => (
-                                    <button
-                                        key={currentPosition}
-                                        onClick={() => sendCommand(index, SvenMoveMode.Position)}
-                                        disabled={isLoading}
-                                        className={`p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center gap-2 border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:bg-white/10`}
-                                    >
-                                        <Clock size={16} />
-                                        {currentPosition}
-                                    </button>
-                                ))}
-                            </div>
-
-                            {/* ABSOLUTE */}
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-semibold text-white">Move Absolute</h2>
-                            </div>
-                            <form
-                                className="flex gap-3 items-center"
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    console.log("Moving to absolute position:", selectedValue);
-                                    sendCommand(selectedValue, SvenMoveMode.Absolute);
-                                }}
+                    {/* Main Control Panel */}
+                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-2xl space-y-4">
+                        <div className="flex flex-row items-center justify-center gap-3 mb-4">
+                            <button
+                                className={`px-4 py-2 rounded-lg ${selectedMode === SvenMoveMode.Relative ? 'bg-blue-500 text-white' : 'bg-white/10 text-slate-300 hover:bg-white/20'}`}
+                                onClick={() => setSelectedMode(SvenMoveMode.Relative)}
                             >
-                                <input
-                                    type="range"
-                                    min={622}
-                                    max={1274}
-                                    value={selectedValue}
-                                    onChange={e => setSelectedValue(Number(e.target.value))}
-                                    disabled={isLoading}
-                                    className="flex-1 p-3 rounded-lg border-2 border-white/20 bg-white/5 text-slate-300 focus:border-blue-400 focus:bg-white/10 transition-all duration-200"
-                                    placeholder="Enter position in cm"
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={isLoading || !selectedValue}
-                                    className="p-3 rounded-lg border-2 border-blue-400 bg-blue-500/20 text-blue-200 transition-all duration-200 flex items-center justify-center gap-2"
-                                >
-                                    <Clock size={16} />
-                                    Set to {(selectedValue / 10).toFixed(1)} cm
-                                </button>
-                            </form>
+                                Distance
+                            </button>
+                            <button
+                                className={`px-4 py-2 rounded-lg ${selectedMode === SvenMoveMode.Duration ? 'bg-blue-500 text-white' : 'bg-white/10 text-slate-300 hover:bg-white/20'}`}
+                                onClick={() => setSelectedMode(SvenMoveMode.Duration)}
+                            >
+                                Duration
+                            </button>
                         </div>
+
+                        {/* RELATIVE */}
+                        {!showSvenDirectionButtons && (
+                            <>
+                                <h2 className="text-lg font-semibold text-white mb-4">Move in a direction</h2>
+                                <button
+                                    onClick={() => handleDirectionClick(SvenDirection.Up)}
+                                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-3"
+                                >
+                                    <ChevronUp size={24} />
+                                    UP
+                                </button>
+                                <button
+                                    onClick={() => handleDirectionClick(SvenDirection.Down)}
+                                    className="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-3"
+                                >
+                                    <ChevronDown size={24} />
+                                    DOWN
+                                </button>
+                            </>
+                        )}
+
+                        {showSvenDirectionButtons && (
+                            <>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-lg font-semibold text-white">{SvenMoveMode[selectedMode]} move</h2>
+                                    <button
+                                        onClick={reset}
+                                        className="text-slate-300 hover:text-white text-sm underline"
+                                    >
+                                        Change Direction
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    {(selectedMode === SvenMoveMode.Duration ? DURATIONS : DISTANCES).map((currDuration) => (
+                                        <button
+                                            key={currDuration.value}
+                                            onClick={() => sendCommand(currDuration.value)}
+                                            disabled={isLoading}
+                                            className={`p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center gap-2 border-white/20 bg-white/5 text-slate-300 hover:border-white/40 hover:bg-white/10`}
+                                        >
+                                            <Clock size={16} />
+                                            {currDuration.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    {/* ABSOLUTE */}
+                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-2xl space-y-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-semibold text-white">Move Absolute</h2>
+                        </div>
+                        <form
+                            className="flex gap-3 items-center"
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                console.log("Moving to absolute position:", selectedValue);
+                                sendCommand(selectedValue, SvenMoveMode.Absolute);
+                            }}
+                        >
+                            <input
+                                type="range"
+                                min={622}
+                                max={1274}
+                                value={selectedValue}
+                                onChange={e => setSelectedValue(Number(e.target.value))}
+                                disabled={isLoading}
+                                className="flex-1 p-3 rounded-lg border-2 border-white/20 bg-white/5 text-slate-300 focus:border-blue-400 focus:bg-white/10 transition-all duration-200"
+                                placeholder="Enter position in cm"
+                            />
+                            <button
+                                type="submit"
+                                disabled={isLoading || !selectedValue}
+                                className="p-3 rounded-lg border-2 border-blue-400 bg-blue-500/20 text-blue-200 transition-all duration-200 flex items-center justify-center gap-2"
+                            >
+                                <Clock size={16} />
+                                Set to {(selectedValue / 10).toFixed(1)} cm
+                            </button>
+                        </form>
+
                     </div>
 
                     {/* Info Panel */}
-                    <div className="mt-6 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                         <h3 className="text-white font-semibold mb-2">API Endpoint</h3>
                         <p className="text-slate-300 text-sm font-mono">POST {svenCommandEndpoint}</p>
                         <p className="text-slate-400 text-xs mt-2">
