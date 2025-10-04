@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ChevronUp, ChevronDown, Clock } from 'lucide-react';
+import { ChevronUp, ChevronDown, Clock, LoaderCircle } from 'lucide-react';
 import { SvenCommand, SvenMoveMode, SvenDirection, SvenResponse, SvenState } from './types';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -154,6 +154,10 @@ export default function MotorControlApp() {
                     {/* Header */}
                     <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold text-white mb-2">Sven Motor Control</h1>
+                        {
+                            isLoading &&
+                            <LoaderCircle className='spinner' />
+                        }
                     </div>
 
                     {/* Response Status */}
