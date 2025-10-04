@@ -10,7 +10,6 @@ const apiBaseUrl = `http://${process.env.NEXT_PUBLIC_SVEN_API_URL || 'localhost'
 const apiPort = 3001;
 const svenCommandEndpoint = `${apiBaseUrl}:${apiPort}/api/sven/command`;
 
-const MODES = ['Duration', 'Relative', 'Absolute', 'Position'] as const;
 const SVEN_POSITIONS = ['Bottom', 'Top', 'Armrest', 'AboveArmrest', 'Standing', 'Custom'] as const;
 const DURATIONS = [
     { label: '1 s', value: 1000 },
