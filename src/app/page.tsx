@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronUp, ChevronDown, Clock } from 'lucide-react';
 import { SvenCommand, SvenMoveMode, SvenDirection, SvenResponse, SvenState } from './types';
 import dotenv from 'dotenv';
@@ -39,32 +39,42 @@ export default function MotorControlApp() {
     const [responseNotification, setResponseNotification] = useState<SvenResponse | null>(null);
     const [statusTimeoutId, setStatusTimeoutId] = useState<NodeJS.Timeout | null>(null);
     const [selectedMode, setSelectedMode] = useState<SvenMoveMode>(SvenMoveMode.Duration);
-    const [currentSvenState, setCurrentSvenState] = useState<SvenState | null>(null);
+    const [svenState, setSvenState] = useState<SvenState | null>(null);
+    const svenStatePollingRef = useRef<NodeJS.Timeout | null>(null);
+
+    const fetchSvenState = async () => {
+        const response = await fetch(`${apiBaseUrl}:${apiPort}/api/sven/state`);
+        if (!response.ok) {
+            throw new Error(`Error fetching Sven state: ${response.statusText}`);
+        }
+        const currSvenState: SvenState = await response.json();
+        return currSvenState
+    };
+
+    function startSvenStatePolling() {
+        svenStatePollingRef.current = setInterval(async () => {
+            const currSvenState = await fetchSvenState();
+            if (currSvenState.height_mm !== svenState?.height_mm && currSvenState.position !== svenState?.position) {
+                console.log("SvenState has changed from", svenState, "to", currSvenState);
+                if (svenStatePollingRef.current !== null) {
+                    console.log("Clearing SvenState Interval")
+                    clearInterval(svenStatePollingRef.current);
+                }
+                console.log("Setting SvenState to", currSvenState)
+                setSvenState(currSvenState);
+                setIsLoading(false);
+                svenStatePollingRef.current = null;
+            }
+        }, 1000);
+    }
 
     useEffect(() => {
-        const fetchSvenState = async () => {
-            try {
-                const response = await fetch(`${apiBaseUrl}:${apiPort}/api/sven/state`);
-                if (!response.ok) {
-                    throw new Error(`Error fetching Sven state: ${response.statusText}`);
-                }
-                const svenState: SvenState = await response.json();
-                setCurrentSvenState(svenState);
-                setSelectedValue(svenState.height_mm || -1); // Set initial value based on Sven state
-                console.log('Fetched Sven state:', svenState);
-            } catch (error) {
-                console.error('Failed to fetch Sven state:', error);
-            }
-        };
-
-        // Fetch Sven state on mount
-        fetchSvenState();
-
-        // Set up interval to refresh Sven state every 10 seconds
-        const intervalId = setInterval(fetchSvenState, 10000);
-
-        return () => clearInterval(intervalId); // Cleanup on unmount
+        fetchSvenState().then(setSvenState);
     }, [])
+
+    useEffect(() => {
+        setSelectedValue(svenState?.height_mm ?? 0)
+    }, [svenState?.height_mm])
 
     const clearNotifications = () => {
         if (statusTimeoutId) {
@@ -128,7 +138,7 @@ export default function MotorControlApp() {
                 timestamp: new Date().toLocaleTimeString()
             });
         } finally {
-            setIsLoading(false);
+            startSvenStatePolling();
         }
         reset();
     };
@@ -177,7 +187,7 @@ export default function MotorControlApp() {
                     <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mt-6 border border-white/20 shadow-2xl space-y-4">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-semibold text-white">Move to a position</h2>
-                            <p className="text-slate-300 text-sm font-mono">h: {((currentSvenState?.height_mm || 0) / 10).toFixed(1)} cm</p>
+                            <p className="text-slate-300 text-sm font-mono">h: {((svenState?.height_mm || 0) / 10).toFixed(1)} cm</p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
@@ -187,7 +197,7 @@ export default function MotorControlApp() {
                                     onClick={() => sendCommand(index, SvenMoveMode.Position)}
                                     disabled={isLoading || currentPosition === "Custom"}
                                     className={`p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center gap-2 hover:border-white/40 hover:bg-white/10
-                                        ${currentSvenState?.position === currentPosition ? 'border-blue-400 bg-blue-900/20 text-blue-200' : 'text-slate-300 border-white/20 bg-white/5'}
+                                        ${svenState?.position === currentPosition ? 'border-blue-400 bg-blue-900/20 text-blue-200' : 'text-slate-300 border-white/20 bg-white/5'}
                                         `}
                                 >
                                     <Clock size={16} />
