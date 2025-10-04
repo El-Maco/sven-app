@@ -19,14 +19,14 @@ const DURATIONS = [
     { label: '15 s', value: 15000 }
 ];
 const DISTANCES = [
-    { label: '1 cm', value: 1 },
-    { label: '2 cm', value: 2 },
-    { label: '5 cm', value: 5 },
-    { label: '10 cm', value: 10 },
-    { label: '15 cm', value: 15 },
-    { label: '20 cm', value: 20 },
-    { label: '25 cm', value: 25 },
-    { label: '30 cm', value: 30 }
+    { label: '1 cm', value: 10 },
+    { label: '2 cm', value: 20 },
+    { label: '5 cm', value: 50 },
+    { label: '10 cm', value: 100 },
+    { label: '15 cm', value: 150 },
+    { label: '20 cm', value: 200 },
+    { label: '25 cm', value: 250 },
+    { label: '30 cm', value: 300 }
 ]
 
 const statusTimeout = 5000;
@@ -185,7 +185,7 @@ export default function MotorControlApp() {
                                 <button
                                     key={currentPosition}
                                     onClick={() => sendCommand(index, SvenMoveMode.Position)}
-                                    disabled={isLoading}
+                                    disabled={isLoading || currentPosition === "Custom"}
                                     className={`p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-center gap-2 hover:border-white/40 hover:bg-white/10
                                         ${currentSvenState?.position === currentPosition ? 'border-blue-400 bg-blue-900/20 text-blue-200' : 'text-slate-300 border-white/20 bg-white/5'}
                                         `}
