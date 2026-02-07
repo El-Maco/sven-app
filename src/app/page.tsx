@@ -54,7 +54,7 @@ export default function MotorControlApp() {
     function startSvenStatePolling() {
         svenStatePollingRef.current = setInterval(async () => {
             const currSvenState = await fetchSvenState();
-            if (currSvenState.height_mm !== svenState?.height_mm && currSvenState.position !== svenState?.position) {
+            if (currSvenState.height_mm !== svenState?.height_mm || currSvenState.position !== svenState?.position) {
                 console.log("SvenState has changed from", svenState, "to", currSvenState);
                 if (svenStatePollingRef.current !== null) {
                     console.log("Clearing SvenState Interval")
@@ -65,7 +65,7 @@ export default function MotorControlApp() {
                 setIsLoading(false);
                 svenStatePollingRef.current = null;
             }
-        }, 1000);
+        }, 250);
     }
 
     useEffect(() => {
